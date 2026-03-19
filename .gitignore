@@ -1,0 +1,9 @@
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Temp files created at runtime
+*.lock
+*_batch.txt
+doc_convert_embed_*.py
