@@ -122,15 +122,24 @@ if ($sofficeCmd) {
     if ($hasPdf.Count -gt 0)  { $docTargets["DOCX"] = "pdf:docx" }
     if ($docTargets.Count -gt 0) { $sections["Documents (LibreOffice)"] = $docTargets }
 } elseif ($hasDocs.Count -gt 0 -or $hasPdf.Count -gt 0) {
-    # LibreOffice not installed — show a hint entry
-    $sections["Documents"] = [ordered]@{ "Install LibreOffice for DOCX/PDF conversion →" = "hint:libreoffice" }
+    # LibreOffice not installed — add an install-prompt entry
+    $sections["Documents  (LibreOffice required)"] = [ordered]@{
+        "DOCX / XLSX / PPTX → PDF  [install LibreOffice]" = "hint:libreoffice"
+        "PDF → DOCX  [install LibreOffice]"               = "hint:libreoffice"
+    }
 }
 
-if ($sections.Count -eq 0 -or ($sections.Count -eq 1 -and $sections.Keys[0] -eq "Documents" -and $sections["Documents"].Count -eq 1)) {
+if ($sections.Count -eq 0) {
     $allExts = @($initialPaths | ForEach-Object { [IO.Path]::GetExtension($_).ToLower() } | Sort-Object -Unique) -join ", "
+    $msgForm = New-Object System.Windows.Forms.Form
+    $msgForm.TopMost = $true
+    $msgForm.WindowState = "Minimized"
+    $msgForm.Show()
     [System.Windows.Forms.MessageBox]::Show(
+        $msgForm,
         "No supported conversions for: $allExts`n`nSupported types:`n• Images: jpg, png, webp, bmp, tiff, gif, heic, avif, jp2, jxl`n• PDF (→ jpg/png pages)`n• Documents (docx, xlsx, pptx) → needs LibreOffice",
         "Doc Convert", "OK", "Information") | Out-Null
+    $msgForm.Close()
     exit 0
 }
 
@@ -185,10 +194,21 @@ foreach ($section in $sections.GetEnumerator()) {
         $btn.Tag = $fmtKey
 
         if ($fmtKey -like "hint:*") {
-            $btn.ForeColor = [System.Drawing.Color]::FromArgb(100, 100, 100)
-            $btn.BackColor = [System.Drawing.Color]::FromArgb(35, 35, 37)
+            $btn.ForeColor = [System.Drawing.Color]::FromArgb(160, 120, 60)
+            $btn.BackColor = [System.Drawing.Color]::FromArgb(45, 38, 28)
+            $btn.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(100, 70, 30)
+            $btn.FlatAppearance.BorderSize = 1
             $btn.Add_Click({
-                Start-Process "https://www.libreoffice.org/download/"
+                $pickerForm.TopMost = $false
+                $ans = [System.Windows.Forms.MessageBox]::Show(
+                    $pickerForm,
+                    "This conversion requires LibreOffice (free).`n`nInstall it from libreoffice.org, then re-run Doc Convert.`n`nOpen download page now?",
+                    "LibreOffice Required",
+                    [System.Windows.Forms.MessageBoxButtons]::YesNo,
+                    [System.Windows.Forms.MessageBoxIcon]::Information)
+                if ($ans -eq [System.Windows.Forms.DialogResult]::Yes) {
+                    Start-Process "https://www.libreoffice.org/download/"
+                }
                 $pickerForm.Close()
             })
         } else {
