@@ -1,61 +1,67 @@
-# Doc Convert — Windows Right-Click Context Menu
+# Doc Convert Menu
 
-Convert images and documents directly from Windows Explorer. Right-click any supported file → **Convert with Doc Convert**.
+Windows right-click context menu for file format conversion. Select any image, PDF, or document in Explorer → **Convert with Doc Convert** → pick a format. No admin rights, no dedicated app to open.
 
-## Supported conversions
+## Install
 
-| Input | Output | Tool required |
-|-------|--------|---------------|
-| JPG, PNG, WebP, BMP, TIFF, GIF, HEIC, AVIF, JP2, JXL | JPG / PNG / WebP / BMP / TIFF / GIF | ImageMagick |
-| Any image | PDF | ImageMagick |
-| PDF | JPG / PNG (one file per page) | ImageMagick |
-| Image | DOCX (image embedded in document) | Python + python-docx (auto-installed) |
-| DOCX, DOC, ODT, RTF, XLSX, XLS, ODS, PPTX, PPT, ODP | PDF | LibreOffice |
-| PDF | DOCX | LibreOffice |
+### One-click installer (recommended)
 
-## Installation
+Download **[DocConvertSetup.exe](https://github.com/toyuvalo/doc-convert-menu/releases/latest)** and run it.
 
-### 1. Install required tools
+The installer:
+- Copies scripts to `%LOCALAPPDATA%\DocConvertMenu\`
+- Auto-installs `python-docx` and `PyMuPDF` via pip (if Python is present)
+- Registers all file type context menu entries in HKCU (no admin required)
 
-**ImageMagick** (for all image + PDF↔image conversions):
-- Download from https://imagemagick.org/script/download.php#windows
-- Use the installer — make sure "Add to PATH" is checked
-
-**LibreOffice** (for DOCX/XLSX/PPTX → PDF and PDF → DOCX):
-- Download from https://www.libreoffice.org/download/
-- Optional — image conversions work without it
-
-**Python** (for image → DOCX embedding):
-- Download from https://www.python.org/downloads/
-- `python-docx` is auto-installed on first use
-
-### 2. Register the context menu
+### Manual install
 
 ```powershell
+git clone https://github.com/toyuvalo/doc-convert-menu
+cd doc-convert-menu
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-No admin rights required — all registry entries go into `HKCU`.
+## Supported conversions
 
-### 3. Use it
+| Input | Output | Requires |
+|-------|--------|----------|
+| JPG / PNG / WebP / BMP / TIFF / GIF / HEIC / AVIF / JP2 | Any image format | ImageMagick |
+| Any image | PDF | ImageMagick |
+| PDF | JPG / PNG (one file per page) | PyMuPDF (auto-installed) |
+| Any image | DOCX (embedded) | python-docx (auto-installed) |
+| DOCX / XLSX / PPTX / ODT | PDF | LibreOffice (optional) |
+| PDF | DOCX | LibreOffice (optional) |
 
-Right-click any supported file in Explorer → **Convert with Doc Convert** → pick your target format.
+## Requirements
 
-Multi-select works: select multiple files, right-click any one → all selected files are converted.
+- Windows 10/11
+- [ImageMagick 7+](https://imagemagick.org/script/download.php#windows) — for image and PDF↔image conversions
+- Python 3.8+ — optional, needed for DOCX embedding and PDF→image
+- LibreOffice — optional, needed for DOCX/XLSX/PPTX→PDF
+
+## Features
+
+- **No admin rights** — all registry entries written to HKCU
+- **Multi-file selection** — select any number of files, right-click once, convert all of them
+- **Auto dependency install** — `python-docx` and `PyMuPDF` pip-installed automatically on first use
+- **Multi-select via VBScript COM** — bypasses the single-file limitation of standard shell extensions
+
+## Build the installer
+
+Requires Windows (IExpress ships with the OS):
+
+```cmd
+build.cmd
+```
+
+Produces `DocConvertSetup.exe` in the repo root.
 
 ## Uninstall
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File uninstall.ps1
+powershell -ExecutionPolicy Bypass -File "%LOCALAPPDATA%\DocConvertMenu\uninstall.ps1"
 ```
 
-## Notes
+## Related
 
-- Output files are saved in the same folder as the input
-- PDF → image creates a `<filename>_pages/` subfolder (one image per page)
-- If the source and output extension are the same, `_converted` is appended
-- The format picker only shows options valid for the file types you selected
-
-## Similar tools
-
-- [ffmpeg-context-menu](https://github.com/toyuvalo/ffmpeg-context-menu) — Same idea for audio/video conversion
+- [ffmpeg-context-menu](https://github.com/toyuvalo/ffmpeg-context-menu) — same idea for audio/video conversion with FFmpeg
