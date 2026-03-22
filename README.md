@@ -65,3 +65,7 @@ powershell -ExecutionPolicy Bypass -File "%LOCALAPPDATA%\DocConvertMenu\uninstal
 ## Related
 
 - [ffmpeg-context-menu](https://github.com/toyuvalo/ffmpeg-context-menu) — same idea for audio/video conversion with FFmpeg
+
+## License
+
+MIT — free to use, modify, and distribute.
