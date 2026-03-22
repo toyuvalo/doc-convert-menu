@@ -58,7 +58,21 @@ For Each wnd In shellApp.Windows
 Next
 On Error GoTo 0
 
-' Fallback: use the %1 argument
+' If COM selection did not include the %1 file, fall back to %1 only.
+' This prevents wrong-window or wrong-selection bugs from passing unrelated files.
+Dim argPath2
+If WScript.Arguments.Count > 0 Then
+    argPath2 = WScript.Arguments(0)
+    If argPath2 <> "" And fso.FileExists(argPath2) Then
+        If Not files.Exists(argPath2) Then
+            ' COM grabbed a different set -- discard and use only %1
+            files.RemoveAll
+            files.Add argPath2, True
+        End If
+    End If
+End If
+
+' Final fallback: if COM found nothing at all, also use %1
 If files.Count = 0 And WScript.Arguments.Count > 0 Then
     Dim argPath
     argPath = WScript.Arguments(0)

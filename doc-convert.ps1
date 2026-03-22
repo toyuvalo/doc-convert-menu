@@ -1,5 +1,5 @@
 ﻿# doc-convert.ps1 -- Image & Document converter with progress UI
-# v1.1.0
+# v1.2.0
 # Supported tools: ImageMagick (images + PDF<->image), LibreOffice (documents), Python/python-docx (image->DOCX)
 
 param(
@@ -226,10 +226,48 @@ foreach ($section in $sections.GetEnumerator()) {
     $yPos += 6
 }
 
+    # ---- Shrink... button ----
+    $yPos += 6
+    $sepShrink = New-Object System.Windows.Forms.Panel
+    $sepShrink.Location = New-Object System.Drawing.Point(20, $yPos)
+    $sepShrink.Size = New-Object System.Drawing.Size(260, 1)
+    $sepShrink.BackColor = [System.Drawing.Color]::FromArgb(55, 55, 57)
+    $pickerForm.Controls.Add($sepShrink)
+    $yPos += 8
+
+    $shrinkBtn = New-Object System.Windows.Forms.Button
+    $shrinkBtn.Text = "Shrink..."
+    $shrinkBtn.Location = New-Object System.Drawing.Point(20, $yPos)
+    $shrinkBtn.Size = New-Object System.Drawing.Size(260, 28)
+    $shrinkBtn.FlatStyle = "Flat"
+    $shrinkBtn.FlatAppearance.BorderSize = 1
+    $shrinkBtn.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(120, 80, 20)
+    $shrinkBtn.BackColor = [System.Drawing.Color]::FromArgb(44, 32, 12)
+    $shrinkBtn.ForeColor = [System.Drawing.Color]::FromArgb(255, 160, 60)
+    $shrinkBtn.TextAlign = "MiddleLeft"
+    $shrinkBtn.Padding = New-Object System.Windows.Forms.Padding(8, 0, 0, 0)
+    $shrinkBtn.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+    $shrinkBtn.Cursor = [System.Windows.Forms.Cursors]::Hand
+    $shrinkBtn.Add_Click({
+        $shrinkListFile = Join-Path $env:TEMP "shrink_from_docconvert_$(Get-Random).txt"
+        [System.IO.File]::WriteAllLines($shrinkListFile, $initialPaths, [System.Text.Encoding]::UTF8)
+        $script:pickedFormat = "_shrink"
+        $pickerForm.Close()
+        $shrinkScript = Join-Path $env:LOCALAPPDATA "ShrinkMenu\shrink.ps1"
+        if (Test-Path $shrinkScript) {
+            Start-Process "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File `"$shrinkScript`" -ListFile `"$shrinkListFile`"" -WindowStyle Hidden
+        }
+    })
+    $shrinkBtn.Add_MouseEnter({ $this.BackColor = [System.Drawing.Color]::FromArgb(60, 44, 18) })
+    $shrinkBtn.Add_MouseLeave({ $this.BackColor = [System.Drawing.Color]::FromArgb(44, 32, 12) })
+    $pickerForm.Controls.Add($shrinkBtn)
+    $yPos += 34
+
 $pickerForm.ClientSize = New-Object System.Drawing.Size(300, ($yPos + 8))
 [System.Windows.Forms.Application]::Run($pickerForm)
 
 if (-not $script:pickedFormat) { exit 0 }
+if ($script:pickedFormat -eq "_shrink") { exit 0 }
 $chosenFormat = $script:pickedFormat
 
 # Parse format key: "category:target"
