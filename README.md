@@ -4,6 +4,20 @@ Windows right-click context menu for file format conversion. Select any image, P
 
 **[Project page →](https://webdev.dvlce.ca/doc-convert)**
 
+## Screenshots
+
+Pick a target format — only formats supported by your installed tools are shown:
+
+![Picker window](screenshots/picker.png)
+
+Progress while converting:
+
+![Progress](screenshots/progress.png)
+
+All done:
+
+![Done](screenshots/done.png)
+
 ## Install
 
 ### One-click installer (recommended)
