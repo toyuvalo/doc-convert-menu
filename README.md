@@ -2,6 +2,8 @@
 
 Windows right-click context menu for file format conversion. Select any image, PDF, or document in Explorer → **Convert with Doc Convert** → pick a format. No admin rights, no dedicated app to open.
 
+**[Project page →](https://webdev.dvlce.ca/doc-convert)**
+
 ## Install
 
 ### One-click installer (recommended)
@@ -65,7 +67,8 @@ powershell -ExecutionPolicy Bypass -File "%LOCALAPPDATA%\DocConvertMenu\uninstal
 ## Related
 
 - [ffmpeg-context-menu](https://github.com/toyuvalo/ffmpeg-context-menu) — same idea for audio/video conversion with FFmpeg
+- [webdev.dvlce.ca/doc-convert](https://webdev.dvlce.ca/doc-convert) — project page
 
 ## License
 
-MIT — free to use, modify, and distribute.
+MIT with [Commons Clause](https://commonsclause.com/) — free to use, modify, and share. Commercial resale not permitted.
