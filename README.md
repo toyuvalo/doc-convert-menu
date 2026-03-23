@@ -2,6 +2,8 @@
 
 Windows right-click context menu for file format conversion. Select any image, PDF, or document in Explorer → **Convert with Doc Convert** → pick a format. No admin rights, no dedicated app to open.
 
+> **Platform:** Windows only. The conversion engine is PowerShell-native and relies on Windows shell integration. A Python-based cross-platform port (macOS + Linux) is planned.
+
 **[Project page →](https://webdev.dvlce.ca/doc-convert)**
 
 ## Screenshots
