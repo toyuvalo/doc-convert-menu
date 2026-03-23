@@ -156,7 +156,8 @@ $extensions = @(
 
 $menuName  = "DocConvert"
 $menuLabel = "Convert with Doc Convert"
-$menuIcon  = "shell32.dll,71"
+$icoPath  = Join-Path $PSScriptRoot "doc-convert.ico"
+$menuIcon  = if (Test-Path $icoPath) { "$icoPath,0" } else { "shell32.dll,71" }
 $cmd       = "wscript.exe `"$launcherPath`" `"%1`""
 
 foreach ($ext in $extensions) {
