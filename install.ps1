@@ -51,31 +51,35 @@ foreach ($p in $softicePaths) {
 if ($libreOk) {
     Write-Host "  [OK] LibreOffice found" -ForegroundColor Green
 } else {
-    Write-Host "  [!!] LibreOffice NOT found" -ForegroundColor Yellow
-    Write-Host "       Needed for DOCX/XLSX/PPTX->PDF and PDF->DOCX." -ForegroundColor DarkGray
+    Write-Host "  [--] LibreOffice NOT found" -ForegroundColor Yellow
+    Write-Host "       Needed for: DOCX / XLSX / PPTX -> PDF   and   PDF -> DOCX" -ForegroundColor DarkGray
+    Write-Host ""
 
-    # Try to install via winget (available on Win10 1809+ and Win11)
     $winget = Get-Command winget -ErrorAction SilentlyContinue
     if ($winget) {
-        Write-Host "  [..] Installing LibreOffice via winget..." -ForegroundColor Yellow
-        Write-Host "       (This is a ~350 MB download, may take a few minutes)" -ForegroundColor DarkGray
-        & winget install --id TheDocumentFoundation.LibreOffice --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
-        # Re-check after install
-        foreach ($p in $softicePaths) {
-            if ((Get-Command $p -ErrorAction SilentlyContinue) -or (Test-Path $p -ErrorAction SilentlyContinue)) {
-                $libreOk = $true; break
+        $ans = Read-Host "  Install LibreOffice now via winget? (~350 MB download) [Y/n]"
+        if ($ans -eq "" -or $ans -match "^[Yy]") {
+            Write-Host "  [..] Installing LibreOffice (this may take a few minutes)..." -ForegroundColor Yellow
+            & winget install --id TheDocumentFoundation.LibreOffice --silent --accept-package-agreements --accept-source-agreements
+            foreach ($p in $softicePaths) {
+                if ((Get-Command $p -ErrorAction SilentlyContinue) -or (Test-Path $p -ErrorAction SilentlyContinue)) {
+                    $libreOk = $true; break
+                }
             }
-        }
-        if ($libreOk) {
-            Write-Host "  [OK] LibreOffice installed successfully" -ForegroundColor Green
+            if ($libreOk) {
+                Write-Host "  [OK] LibreOffice installed" -ForegroundColor Green
+            } else {
+                Write-Host "  [!!] Install may need a restart to take effect." -ForegroundColor Yellow
+                Write-Host "       Re-run install.ps1 after restarting if DOCX->PDF doesn't show up." -ForegroundColor DarkGray
+            }
         } else {
-            Write-Host "  [!!] LibreOffice install may need a restart to take effect." -ForegroundColor Yellow
-            Write-Host "       If DOCX->PDF still doesn't work after restart, install manually:" -ForegroundColor DarkGray
-            Write-Host "       https://www.libreoffice.org/download/" -ForegroundColor DarkGray
+            Write-Host "  [--] Skipped. DOCX/XLSX/PPTX->PDF and PDF->DOCX won't be available." -ForegroundColor DarkGray
+            Write-Host "       Install later from https://www.libreoffice.org/download/" -ForegroundColor DarkGray
+            Write-Host "       then re-run install.ps1." -ForegroundColor DarkGray
         }
     } else {
-        Write-Host "       winget not available. Install manually:" -ForegroundColor DarkGray
-        Write-Host "       https://www.libreoffice.org/download/" -ForegroundColor DarkGray
+        Write-Host "       Install from https://www.libreoffice.org/download/" -ForegroundColor DarkGray
+        Write-Host "       then re-run install.ps1." -ForegroundColor DarkGray
     }
 }
 
