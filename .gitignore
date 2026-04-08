@@ -3,6 +3,9 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
+# Build output
+*.exe
+
 # Temp files created at runtime
 *.lock
 *_batch.txt
