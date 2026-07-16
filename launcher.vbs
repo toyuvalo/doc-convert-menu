@@ -1,18 +1,28 @@
-' launcher.vbs — Collects ALL selected files from Explorer via COM, then launches doc-convert
-' Windows launches one wscript per file, but we only need the first instance.
-' The first instance grabs the full selection from the Explorer window via Shell.Application.
+' launcher.vbs v2.0.0 — Collects ALL selected files from Explorer via COM, then launches doc-convert
+' Bug fix 2026-05-19: previously iterated all Explorer windows and grabbed the
+' SelectedItems of the FIRST one with any selection — which could be the wrong
+' window if the user had another Explorer window open. The prior version
+' workaround (lines 63-73) detected the mismatch but lost multi-select. The
+' new logic matches the right-clicked path (%1) against each window's
+' selection and uses ALL files from the correct window.
 ' Usage: wscript.exe launcher.vbs "%1"
 
 Dim fso, wshShell
 Set fso = CreateObject("Scripting.FileSystemObject")
 Set wshShell = CreateObject("WScript.Shell")
 
+Dim rightClickedPath
+If WScript.Arguments.Count > 0 Then
+    rightClickedPath = WScript.Arguments(0)
+Else
+    rightClickedPath = ""
+End If
+
 ' Use a lock file so only the first instance does the work
 Dim tempDir, lockFile
 tempDir = wshShell.ExpandEnvironmentStrings("%TEMP%")
 lockFile = tempDir & "\doc_convert.lock"
 
-' Try to create lock — first instance wins, rest exit
 On Error Resume Next
 If fso.FileExists(lockFile) Then
     Dim lockAge
@@ -33,7 +43,7 @@ On Error GoTo 0
 ' Small delay to let Explorer finish launching all instances
 WScript.Sleep 400
 
-' Get selected files from the active Explorer window via COM
+' Find the Explorer window whose selection contains the right-clicked path
 Dim shellApp, wnd, selectedItems
 Dim files
 Set files = CreateObject("Scripting.Dictionary")
@@ -45,39 +55,32 @@ For Each wnd In shellApp.Windows
         Set selectedItems = wnd.Document.SelectedItems
         If Not selectedItems Is Nothing Then
             If selectedItems.Count > 0 Then
-                Dim item
+                Dim item, matchFound
+                matchFound = False
                 For Each item In selectedItems
-                    If Not files.Exists(item.Path) Then
-                        files.Add item.Path, True
+                    If StrComp(item.Path, rightClickedPath, vbTextCompare) = 0 Then
+                        matchFound = True
+                        Exit For
                     End If
                 Next
-                If files.Count > 0 Then Exit For
+                If matchFound Then
+                    For Each item In selectedItems
+                        If Not files.Exists(item.Path) Then
+                            files.Add item.Path, True
+                        End If
+                    Next
+                    Exit For
+                End If
             End If
         End If
     End If
 Next
 On Error GoTo 0
 
-' If COM selection did not include the %1 file, fall back to %1 only.
-' This prevents wrong-window or wrong-selection bugs from passing unrelated files.
-Dim argPath2
-If WScript.Arguments.Count > 0 Then
-    argPath2 = WScript.Arguments(0)
-    If argPath2 <> "" And fso.FileExists(argPath2) Then
-        If Not files.Exists(argPath2) Then
-            ' COM grabbed a different set -- discard and use only %1
-            files.RemoveAll
-            files.Add argPath2, True
-        End If
-    End If
-End If
-
-' Final fallback: if COM found nothing at all, also use %1
-If files.Count = 0 And WScript.Arguments.Count > 0 Then
-    Dim argPath
-    argPath = WScript.Arguments(0)
-    If argPath <> "" And fso.FileExists(argPath) Then
-        files.Add argPath, True
+' Fallback: use %1 alone if no window matched
+If files.Count = 0 And rightClickedPath <> "" Then
+    If fso.FileExists(rightClickedPath) Then
+        files.Add rightClickedPath, True
     End If
 End If
 

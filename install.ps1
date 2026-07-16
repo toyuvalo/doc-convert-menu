@@ -166,14 +166,22 @@ $cmd       = "wscript.exe `"$launcherPath`" `"%1`""
 
 foreach ($ext in $extensions) {
     $regPath = "HKCU:\Software\Classes\SystemFileAssociations\$ext\shell\$menuName"
-    if (Test-Path $regPath) { Remove-Item -Path $regPath -Recurse -Force -ErrorAction SilentlyContinue }
+    # Use -LiteralPath defensively. Paths here are wildcard-free (per-ext under
+    # SystemFileAssociations) so -Path would work, but the sibling FFmpegMenu
+    # installer registers under \*\shell\... and got bitten 2026-05-19 by PS
+    # treating '*' as a glob — Set-Item -Path hung indefinitely, Set-ItemProperty
+    # -Path silently failed to write (Default). -LiteralPath is the only safe
+    # form for any registry path that might contain shell wildcard verb-classes.
+    if (Test-Path -LiteralPath $regPath) {
+        Remove-Item -LiteralPath $regPath -Recurse -Force -ErrorAction SilentlyContinue
+    }
     New-Item -Path $regPath -Force | Out-Null
-    Set-ItemProperty -Path $regPath -Name "(Default)"        -Value $menuLabel
-    Set-ItemProperty -Path $regPath -Name "Icon"             -Value $menuIcon
-    Set-ItemProperty -Path $regPath -Name "MultiSelectModel" -Value "Player"
+    Set-ItemProperty -LiteralPath $regPath -Name "(default)"        -Value $menuLabel
+    Set-ItemProperty -LiteralPath $regPath -Name "Icon"             -Value $menuIcon
+    Set-ItemProperty -LiteralPath $regPath -Name "MultiSelectModel" -Value "Player"
     $cmdKey = "$regPath\command"
     New-Item -Path $cmdKey -Force | Out-Null
-    Set-ItemProperty -Path $cmdKey -Name "(Default)" -Value $cmd
+    Set-ItemProperty -LiteralPath $cmdKey -Name "(default)" -Value $cmd
 }
 
 Write-Host "  Registered $($extensions.Count) file types" -ForegroundColor Green
