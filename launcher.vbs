@@ -1,4 +1,9 @@
-' launcher.vbs v2.0.0 — Collects ALL selected files from Explorer via COM, then launches doc-convert
+' launcher.vbs v2.1.0 — Collects ALL selected files from Explorer via COM, then launches doc-convert
+' Bug fix 2026-07-25: the file list was written with FileSystemObject's default
+' ASCII/ANSI encoding while doc-convert.ps1 read it back as UTF-8. Any name with
+' a non-ASCII character (smart quote ’, accent, en-dash) came back with a
+' replacement character, the path stopped resolving, and the file was silently
+' dropped from the batch. Now written as UTF-8 via ADODB.Stream.
 ' Bug fix 2026-05-19: previously iterated all Explorer windows and grabbed the
 ' SelectedItems of the FIRST one with any selection — which could be the wrong
 ' window if the user had another Explorer window open. The prior version
@@ -91,14 +96,37 @@ On Error GoTo 0
 
 If files.Count = 0 Then WScript.Quit
 
-' Write file list to temp file
-Dim collectFile, cf, key
+' Write the file list as UTF-8 (with BOM) so non-ASCII file names survive the
+' hand-off. ADODB.Stream is the only way to set the encoding from VBS.
+Dim collectFile, key, stream, wroteUtf8
 collectFile = tempDir & "\doc_convert_batch.txt"
-Set cf = fso.CreateTextFile(collectFile, True)
-For Each key In files.Keys
-    cf.WriteLine key
-Next
-cf.Close
+wroteUtf8 = False
+
+On Error Resume Next
+Set stream = CreateObject("ADODB.Stream")
+If Err.Number = 0 Then
+    stream.Type = 2                  ' adTypeText
+    stream.Charset = "utf-8"
+    stream.Open
+    For Each key In files.Keys
+        stream.WriteText key & vbCrLf
+    Next
+    stream.SaveToFile collectFile, 2 ' adSaveCreateOverWrite
+    stream.Close
+    If Err.Number = 0 Then wroteUtf8 = True
+End If
+Err.Clear
+On Error GoTo 0
+
+' Fallback if ADODB is unavailable -- ASCII-named files still convert.
+If Not wroteUtf8 Then
+    Dim cf
+    Set cf = fso.CreateTextFile(collectFile, True)
+    For Each key In files.Keys
+        cf.WriteLine key
+    Next
+    cf.Close
+End If
 
 ' Launch PowerShell converter
 Dim scriptPath, cmd

@@ -63,6 +63,7 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 - **Multi-file selection** — select any number of files, right-click once, convert all of them
 - **Auto dependency install** — `python-docx` and `PyMuPDF` pip-installed automatically on first use
 - **Multi-select via VBScript COM** — bypasses the single-file limitation of standard shell extensions
+- **Any file name** — smart quotes (`’`), accents, `[brackets]` and `%` all convert correctly. Earlier versions silently skipped them: the Explorer file list was handed over in the system codepage and read back as UTF-8, so those names stopped resolving. Fixed in v1.2.1
 
 ## Build the installer
 

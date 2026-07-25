@@ -1,5 +1,8 @@
 ﻿# doc-convert.ps1 -- Image & Document converter with progress UI
-# v1.2.0
+# v1.2.1
+# 2026-07-25 -- file names with a smart quote / accent are no longer skipped:
+#   launcher.vbs now hands over a UTF-8 list (was ANSI, read back as UTF-8), and
+#   every path operation uses -LiteralPath ('[' / ']' were read as wildcards).
 # Supported tools: ImageMagick (images + PDF<->image), LibreOffice (documents), Python/python-docx (image->DOCX)
 
 param(
@@ -67,11 +70,15 @@ $allDocExts  = $docExts + $spreadExts + $presExts
 # ======================================
 
 $initialPaths = @()
-if ($ListFile -and (Test-Path $ListFile)) {
-    $initialPaths = @(Get-Content $ListFile -Encoding UTF8 |
+if ($ListFile -and (Test-Path -LiteralPath $ListFile)) {
+    # ReadAllLines honours the BOM (UTF-8 from launcher.vbs) and defaults to
+    # UTF-8. Get-Content -Encoding UTF8 mangled every non-ASCII character the
+    # launcher used to write in the system codepage.
+    $listFullPath = (Resolve-Path -LiteralPath $ListFile).Path
+    $initialPaths = @([System.IO.File]::ReadAllLines($listFullPath) |
         Where-Object { $_.Trim() -ne "" } |
         ForEach-Object { $_.Trim() })
-    Remove-Item $ListFile -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $listFullPath -Force -ErrorAction SilentlyContinue
 } elseif ($Path) {
     $initialPaths = @($Path)
 }
@@ -281,7 +288,8 @@ $fmtTarget   = $fmtParts[1]
 
 $files = @()
 foreach ($p in $initialPaths) {
-    if (-not (Test-Path $p -PathType Leaf)) { continue }
+    # -LiteralPath: '[' / ']' in a file name are wildcards otherwise.
+    if (-not (Test-Path -LiteralPath $p -PathType Leaf)) { continue }
     $ext = [IO.Path]::GetExtension($p).ToLower()
     $keep = switch ($fmtCategory) {
         "img" { $imageExts  -contains $ext }
@@ -289,7 +297,7 @@ foreach ($p in $initialPaths) {
         "doc" { $allDocExts -contains $ext }
         default { $false }
     }
-    if ($keep) { $files += Get-Item $p }
+    if ($keep) { $files += Get-Item -LiteralPath $p }
 }
 
 if ($files.Count -eq 0) {
@@ -572,15 +580,15 @@ $timer.Add_Tick({
         $success  = $false
 
         if ($job.IsPageJob) {
-            $pageFiles = @(Get-ChildItem $job.OutDir -ErrorAction SilentlyContinue)
+            $pageFiles = @(Get-ChildItem -LiteralPath $job.OutDir -ErrorAction SilentlyContinue)
             $success   = ($job.Process.ExitCode -eq 0) -and ($pageFiles.Count -gt 0)
             if ($success) { $listView.Items[$idx].SubItems[1].Text = "Done ($($pageFiles.Count) pages)" }
         } else {
-            $success = ($job.Process.ExitCode -eq 0) -and ($job.OutPath -ne $null) -and (Test-Path $job.OutPath)
+            $success = ($job.Process.ExitCode -eq 0) -and ($job.OutPath -ne $null) -and (Test-Path -LiteralPath $job.OutPath)
         }
 
         foreach ($pf in @($job.PyFile, $job.PyFile2)) {
-            if ($pf -and (Test-Path $pf)) { Remove-Item $pf -Force -ErrorAction SilentlyContinue }
+            if ($pf -and (Test-Path -LiteralPath $pf)) { Remove-Item -LiteralPath $pf -Force -ErrorAction SilentlyContinue }
         }
 
         if ($success) {
