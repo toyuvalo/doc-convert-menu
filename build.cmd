@@ -8,32 +8,80 @@ REM Strip trailing backslash from SRC for IExpress compatibility
 if "%SRC:~-1%"=="\" set "SRC=%SRC:~0,-1%"
 set "SED=%TEMP%\docconvert_build.sed"
 
-powershell -NoProfile -Command " ^
-  $lines = @( ^
-    '[Version]','Class=IEXPRESS','SEDVersion=3', ^
-    '[Options]','PackagePurpose=InstallApp','ShowInstallProgramWindow=0', ^
-    'HideExtractAnimation=0','UseLongFileName=1','InsideCompressed=0', ^
-    'CAB_FixedSize=0','CAB_ResvCodeSigning=0','RebootMode=N', ^
-    'InstallPrompt=','DisplayLicense=','FinishMessage=', ^
-    'TargetName=%OUT%','FriendlyName=Doc Convert Menu Installer', ^
-    'AppLaunched=setup.cmd','PostInstallCmd=<None>', ^
-    'AdminQuietInstCmd=','UserQuietInstCmd=','SourceFiles=SourceFiles', ^
-    '[Strings]','FILE0=setup.cmd','FILE1=setup.ps1','FILE2=doc-convert.ps1', ^
-    'FILE3=launcher.vbs','FILE4=install.ps1','FILE5=uninstall.ps1', ^
-    '[SourceFiles]','SourceFiles0=%SRC%','[SourceFiles0]', ^
-    '%%FILE0%%=','%%FILE1%%=','%%FILE2%%=','%%FILE3%%=','%%FILE4%%=','%%FILE5%%=' ^
-  ); ^
-  [System.IO.File]::WriteAllLines('%SED%', $lines, [System.Text.Encoding]::ASCII)"
+REM Written with a plain echo block, matching the sibling repos. The previous
+REM version shelled out to PowerShell across caret-continued lines; cmd does
+REM not treat ^ as a continuation inside a quoted argument, so under `call` the
+REM carets reached PowerShell literally ("The term '^' is not recognized"), no
+REM SED was written, and iexpress then failed on a missing file.
+(
+echo [Version]
+echo Class=IEXPRESS
+echo SEDVersion=3
+echo [Options]
+echo PackagePurpose=InstallApp
+echo ShowInstallProgramWindow=0
+echo HideExtractAnimation=0
+echo UseLongFileName=1
+echo InsideCompressed=0
+echo CAB_FixedSize=0
+echo CAB_ResvCodeSigning=0
+echo RebootMode=N
+echo InstallPrompt=
+echo DisplayLicense=
+echo FinishMessage=
+echo TargetName=%OUT%
+echo FriendlyName=Doc Convert Menu Installer
+echo AppLaunched=setup.cmd
+echo PostInstallCmd=^<None^>
+echo AdminQuietInstCmd=
+echo UserQuietInstCmd=
+echo SourceFiles=SourceFiles
+echo [Strings]
+echo FILE0="setup.cmd"
+echo FILE1="setup.ps1"
+echo FILE2="doc-convert.ps1"
+echo FILE3="launcher.vbs"
+echo FILE4="install.ps1"
+echo FILE5="uninstall.ps1"
+echo [SourceFiles]
+echo SourceFiles0=%SRC%
+echo [SourceFiles0]
+echo %%FILE0%%=
+echo %%FILE1%%=
+echo %%FILE2%%=
+echo %%FILE3%%=
+echo %%FILE4%%=
+echo %%FILE5%%=
+) > "%SED%"
 
-iexpress.exe /N /Q "%SED%"
+REM Record the existing build so success can be judged on the timestamp.
+REM "if exist" alone is a false positive: it passes on a stale .exe from a
+REM previous build, which is how a broken iexpress call went unnoticed from
+REM 2026-03 to 2026-07.
+set "STAMP="
+if exist "%OUT%" for %%F in ("%OUT%") do set "STAMP=%%~tF"
+
+REM Do NOT quote %SED%. IExpress takes the quotes as part of the file name and
+REM fails with "Error opening the IExpress Self Extraction Directive file" --
+REM silently, because /Q suppresses that dialog. Keep %TEMP% free of spaces.
+iexpress.exe /N /Q %SED%
 del "%SED%" >nul 2>&1
 
-if exist "%OUT%" (
+set "NEWSTAMP="
+if exist "%OUT%" for %%F in ("%OUT%") do set "NEWSTAMP=%%~tF"
+
+if not defined NEWSTAMP (
     echo.
-    echo   Built: %OUT%
+    echo   ERROR: Build failed - no output produced.
+    echo          Try running as the current user without spaces in the path.
+    echo.
+) else if "%NEWSTAMP%"=="%STAMP%" (
+    echo.
+    echo   ERROR: Build failed - %OUT% is unchanged ^(%NEWSTAMP%^).
+    echo          iexpress produced nothing; the old installer is still there.
     echo.
 ) else (
     echo.
-    echo   ERROR: Build failed. Try running as the current user without spaces in the path.
+    echo   Built: %OUT%  ^(%NEWSTAMP%^)
     echo.
 )
