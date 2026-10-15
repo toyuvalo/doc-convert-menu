@@ -10,3 +10,6 @@ desktop.ini
 *.lock
 *_batch.txt
 doc_convert_embed_*.py
+
+# Launcher build output
+build/

@@ -1,7 +1,7 @@
 # install.ps1 -- Register Doc Convert context menu + auto-install Python dependencies
 # Run: powershell -ExecutionPolicy Bypass -File install.ps1
 
-$launcherPath = Join-Path $PSScriptRoot "launcher.vbs"
+$launcherPath = Join-Path $PSScriptRoot "build\DocConvert.exe"
 $scriptPath   = Join-Path $PSScriptRoot "doc-convert.ps1"
 
 if (-not (Test-Path $scriptPath)) {
@@ -9,8 +9,15 @@ if (-not (Test-Path $scriptPath)) {
     exit 1
 }
 if (-not (Test-Path $launcherPath)) {
-    Write-Host "ERROR: launcher.vbs not found in $PSScriptRoot" -ForegroundColor Red
-    exit 1
+    # Compile the launcher with the in-box .NET Framework compiler (no extra install).
+    $csc = Join-Path $env:WINDIR "Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+    if (-not (Test-Path $csc)) { $csc = Join-Path $env:WINDIR "Microsoft.NET\Framework\v4.0.30319\csc.exe" }
+    New-Item -ItemType Directory -Path (Split-Path $launcherPath) -Force | Out-Null
+    & $csc /nologo /target:winexe /optimize+ "/win32icon:$(Join-Path $PSScriptRoot 'doc-convert.ico')" /r:Microsoft.CSharp.dll "/out:$launcherPath" (Join-Path $PSScriptRoot "launcher\DocConvertLauncher.cs")
+    if (-not (Test-Path $launcherPath)) {
+        Write-Host "ERROR: could not build $launcherPath" -ForegroundColor Red
+        exit 1
+    }
 }
 
 Write-Host "Doc Convert -- Installer" -ForegroundColor Cyan
@@ -162,7 +169,7 @@ $menuName  = "DocConvert"
 $menuLabel = "Convert with Doc Convert"
 $icoPath  = Join-Path $PSScriptRoot "doc-convert.ico"
 $menuIcon  = if (Test-Path $icoPath) { "$icoPath,0" } else { "shell32.dll,71" }
-$cmd       = "wscript.exe `"$launcherPath`" `"%1`""
+$cmd       = "`"$launcherPath`" `"%1`""
 
 foreach ($ext in $extensions) {
     $regPath = "HKCU:\Software\Classes\SystemFileAssociations\$ext\shell\$menuName"

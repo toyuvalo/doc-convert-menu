@@ -26,10 +26,11 @@ All done:
 
 Download **[DocConvertSetup.exe](https://github.com/toyuvalo/doc-convert-menu/releases/latest)** and run it.
 
-The installer:
-- Copies scripts to `%LOCALAPPDATA%\DocConvertMenu\`
-- Auto-installs `python-docx` and `PyMuPDF` via pip (if Python is present)
-- Registers all file type context menu entries in HKCU (no admin required)
+The installer (Inno Setup, per-user, no admin):
+- Copies `DocConvert.exe` and `doc-convert.ps1` to `%LOCALAPPDATA%\DocConvertMenu\`
+- Registers all file type context menu entries in HKCU
+- Adds a normal uninstall entry in Settings > Apps
+- Runs no scripts and downloads nothing. `python-docx` and `PyMuPDF` are pip-installed on first use, if Python is present
 
 ### Manual install
 
@@ -62,20 +63,26 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 - **No admin rights** — all registry entries written to HKCU
 - **Multi-file selection** — select any number of files, right-click once, convert all of them
 - **Auto dependency install** — `python-docx` and `PyMuPDF` pip-installed automatically on first use
-- **Multi-select via VBScript COM** — bypasses the single-file limitation of standard shell extensions
+- **Multi-select via Shell COM** — the compiled `DocConvert.exe` launcher collects every selected file from the right Explorer window
 - **Any file name** — smart quotes (`’`), accents, `[brackets]` and `%` all convert correctly. Earlier versions silently skipped them: the Explorer file list was handed over in the system codepage and read back as UTF-8, so those names stopped resolving. Fixed in v1.2.1
 
 ## Build the installer
 
-Requires Windows (IExpress ships with the OS):
+Requires Windows, the in-box .NET Framework 4.x compiler, and [Inno Setup 6](https://jrsoftware.org/isinfo.php) (`winget install JRSoftware.InnoSetup`):
 
 ```cmd
 build.cmd
 ```
 
-Produces `DocConvertSetup.exe` in the repo root.
+Produces `build\DocConvert.exe` and `DocConvertSetup.exe` in the repo root.
+
+### Antivirus alerts
+
+Up to v1.2.1 the installer was an IExpress package that ran `powershell -ExecutionPolicy Bypass`, and the menu ran `wscript.exe launcher.vbs`, which started a hidden PowerShell window. That chain matches common malware, so some antivirus products flagged it as a trojan. v1.3.0 removes IExpress and VBScript. Code signing is planned.
 
 ## Uninstall
+
+Settings > Apps > **Doc Convert Menu** > Uninstall. For a manual install:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "%LOCALAPPDATA%\DocConvertMenu\uninstall.ps1"

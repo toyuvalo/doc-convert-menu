@@ -1,5 +1,7 @@
-﻿# doc-convert.ps1 -- Image & Document converter with progress UI
-# v1.2.1
+# doc-convert.ps1 -- Image & Document converter with progress UI
+# v1.3.0
+# 2026-10-15 -- started by DocConvert.exe (compiled launcher) instead of launcher.vbs;
+#   antivirus flagged the old wscript -> hidden PowerShell chain as a trojan.
 # 2026-07-25 -- file names with a smart quote / accent are no longer skipped:
 #   launcher.vbs now hands over a UTF-8 list (was ANSI, read back as UTF-8), and
 #   every path operation uses -LiteralPath ('[' / ']' were read as wildcards).
