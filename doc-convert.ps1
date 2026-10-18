@@ -1,5 +1,5 @@
 # doc-convert.ps1 -- Image & Document converter with progress UI
-# v1.3.1
+# v1.3.2
 # 2026-10-15 -- started by DocConvert.exe (compiled launcher) instead of launcher.vbs;
 #   antivirus flagged the old wscript -> hidden PowerShell chain as a trojan.
 # 2026-07-25 -- file names with a smart quote / accent are no longer skipped:

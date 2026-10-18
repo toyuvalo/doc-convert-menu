@@ -1,14 +1,17 @@
-; DocConvert.iss -- Inno Setup script for DocConvertSetup.exe (v1.3.1)
+; DocConvert.iss -- Inno Setup script for DocConvertSetup.exe (v1.3.2)
 ; Replaces the IExpress package. IExpress extracted to %TEMP% and ran
 ; setup.cmd -> powershell -ExecutionPolicy Bypass, the same chain malware
 ; droppers use, and antivirus flagged it. This installer runs no scripts:
-; it copies files and writes the HKCU context-menu keys itself.
+; it copies files and writes the HKCU context-menu keys itself. v1.3.2: when
+; ImageMagick is not on the PATH, it downloads it (dvlce-deps.iss).
 ; Build: build.cmd (needs Inno Setup 6, ISCC.exe).
 
-#define AppVersion "1.3.1"
+#define AppVersion "1.3.2"
+#define AppGuid "6F1C2B7E-4D3A-4E8B-9C1F-2A7D5E0B3C91"
+#define NeedMagick
 
 [Setup]
-AppId={{6F1C2B7E-4D3A-4E8B-9C1F-2A7D5E0B3C91}
+AppId={{{#AppGuid}}
 AppName=Doc Convert Menu
 AppVersion={#AppVersion}
 AppPublisher=DVLCE
@@ -30,6 +33,7 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 ChangesAssociations=yes
+ChangesEnvironment=yes
 #ifdef SIGN
 ; build.cmd passes /DSIGN and /Sazsign=<signtool command> (Azure Artifact Signing).
 SignTool=azsign
@@ -81,3 +85,15 @@ Type: files; Name: "{app}\uninstall.ps1"
 #emit Entry(".pptx")
 #emit Entry(".ppt")
 #emit Entry(".odp")
+
+#include "dvlce-deps.iss"
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then InstallDeps();
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usPostUninstall then UninstallDeps();
+end;

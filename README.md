@@ -54,7 +54,7 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 ## Requirements
 
 - Windows 10/11
-- [ImageMagick 7+](https://imagemagick.org/script/download.php#windows) — for image and PDF↔image conversions
+- [ImageMagick 7+](https://imagemagick.org/script/download.php#windows) — for image and PDF↔image conversions. Since v1.3.2 the installer downloads it when it is not on your PATH: the newest portable build from [GitHub](https://github.com/ImageMagick/ImageMagick/releases), SHA-256 checked, into `%LOCALAPPDATA%\Programs\DVLCE\imagemagick`, added to your user PATH. Shrink Menu uses the same copy; uninstalling removes it only when no other tool still needs it
 - Python 3.8+ — optional, needed for DOCX embedding and PDF→image
 - LibreOffice — optional, needed for DOCX/XLSX/PPTX→PDF
 
