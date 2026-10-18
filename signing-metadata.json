@@ -1,0 +1,6 @@
+{
+  "Endpoint": "https://eus.codesigning.azure.net",
+  "CodeSigningAccountName": "dvlce-signing",
+  "CertificateProfileName": "dvlce-public",
+  "ExcludeCredentials": ["ManagedIdentityCredential","EnvironmentCredential","WorkloadIdentityCredential","SharedTokenCacheCredential","VisualStudioCredential","VisualStudioCodeCredential","AzurePowerShellCredential","AzureDeveloperCliCredential","InteractiveBrowserCredential"]
+}

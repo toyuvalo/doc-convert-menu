@@ -78,7 +78,7 @@ Produces `build\DocConvert.exe` and `DocConvertSetup.exe` in the repo root.
 
 ### Antivirus alerts
 
-Up to v1.2.1 the installer was an IExpress package that ran `powershell -ExecutionPolicy Bypass`, and the menu ran `wscript.exe launcher.vbs`, which started a hidden PowerShell window. That chain matches common malware, so some antivirus products flagged it as a trojan. v1.3.0 removes IExpress and VBScript. Code signing is planned.
+Up to v1.2.1 the installer was an IExpress package that ran `powershell -ExecutionPolicy Bypass`, and the menu ran `wscript.exe launcher.vbs`, which started a hidden PowerShell window. That chain matches common malware, so some antivirus products flagged it as a trojan. v1.3.0 removes IExpress and VBScript. From v1.3.1 the installer, the launcher and the script are code-signed (publisher "Yuval Olsha", Microsoft Azure Artifact Signing).
 
 ## Uninstall
 

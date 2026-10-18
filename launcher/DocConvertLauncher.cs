@@ -1,4 +1,4 @@
-// DocConvertLauncher.cs -- DocConvert.exe, the right-click entry point (v1.3.0)
+// DocConvertLauncher.cs -- DocConvert.exe, the right-click entry point (v1.3.1)
 // Replaces launcher.vbs. A wscript-run VBScript that starts a hidden PowerShell
 // window is a classic malware chain, and antivirus flagged the installer for it.
 // VBScript is also being removed from Windows. Same logic as the VBS:
@@ -22,8 +22,8 @@ using System.Threading;
 [assembly: AssemblyProduct("Doc Convert Menu")]
 [assembly: AssemblyCompany("DVLCE")]
 [assembly: AssemblyCopyright("MIT with Commons Clause")]
-[assembly: AssemblyVersion("1.3.0.0")]
-[assembly: AssemblyFileVersion("1.3.0.0")]
+[assembly: AssemblyVersion("1.3.1.0")]
+[assembly: AssemblyFileVersion("1.3.1.0")]
 
 static class DocConvertLauncher
 {

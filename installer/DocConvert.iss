@@ -1,11 +1,11 @@
-; DocConvert.iss -- Inno Setup script for DocConvertSetup.exe (v1.3.0)
+; DocConvert.iss -- Inno Setup script for DocConvertSetup.exe (v1.3.1)
 ; Replaces the IExpress package. IExpress extracted to %TEMP% and ran
 ; setup.cmd -> powershell -ExecutionPolicy Bypass, the same chain malware
 ; droppers use, and antivirus flagged it. This installer runs no scripts:
 ; it copies files and writes the HKCU context-menu keys itself.
 ; Build: build.cmd (needs Inno Setup 6, ISCC.exe).
 
-#define AppVersion "1.3.0"
+#define AppVersion "1.3.1"
 
 [Setup]
 AppId={{6F1C2B7E-4D3A-4E8B-9C1F-2A7D5E0B3C91}
@@ -30,10 +30,15 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 ChangesAssociations=yes
+#ifdef SIGN
+; build.cmd passes /DSIGN and /Sazsign=<signtool command> (Azure Artifact Signing).
+SignTool=azsign
+SignedUninstaller=yes
+#endif
 
 [Files]
 Source: "..\build\DocConvert.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\doc-convert.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\doc-convert.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\doc-convert.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [InstallDelete]
